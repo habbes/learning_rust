@@ -22,6 +22,8 @@ fn main() {
 fn read_username_from_file() -> Result<String, io::Error> {
     // use ? as shortcut to return Err Result if call fails,
     // saves us from using match Ok, Err for this common scenario
+    // this works if the error returned by the function call
+    // is compatible with the error type in this function's return type
     let mut username_file = File::open("hello.txt")?;
     let mut username = String::new();
     username_file.read_to_string(&mut username)?;
