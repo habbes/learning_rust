@@ -2,7 +2,7 @@
 // to document the component that contains the comment.
 //! # Minigrep
 //! 
-//! `minigrep` contains utilities to find lines in that match a specific term in a body of text.
+//! `minigrep_habes` contains utilities to find lines in that match a specific term in a body of text.
 
 use std::error::Error;
 use std::fs;
@@ -70,7 +70,7 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
 ///This is a test.
 ///Good bye.
 ///This is another test.";
-/// let result = minigrep::search(query, contents);
+/// let result = minigrep_habbes::search(query, contents);
 /// assert_eq!(vec!["This is a test.", "This is another test."], result);
 /// ```
 pub fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {

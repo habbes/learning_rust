@@ -1,5 +1,5 @@
 [package]
-name = "habbes-minigrep-exercise"
+name = "minigrep_habbes"
 version = "0.1.0"
 edition = "2021"
 description = "Utility for search files. Made this while learning Rust. Do not use it in production."
