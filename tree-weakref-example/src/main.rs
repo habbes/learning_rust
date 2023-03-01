@@ -67,4 +67,7 @@ fn main() {
         Rc::strong_count(&leaf),
         Rc::weak_count(&leaf),
     );
+
+    // the leaf node's ref count will decrease to 0 at the end of the scope
+    // and the node will get dropped: no memory leaks
 }
