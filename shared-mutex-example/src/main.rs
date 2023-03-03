@@ -9,9 +9,11 @@ fn main() {
     let mut handles = vec![];
 
     for _ in 0..10 {
+        // Trying to move an Rc to a different thread will fail
+        // because it does not implement the Send trait
         let counter = Arc::clone(&counter);
         let handle = thread::spawn(move || {
-            // Mutex.lock() is blocks until this thread acquires the lock
+            // Mutex.lock() blocks until this thread acquires the lock
             // It returns a MutexGuard smart pointer which releases the lock when it goes
             // out of scope.
             let mut val = counter.lock().unwrap();
