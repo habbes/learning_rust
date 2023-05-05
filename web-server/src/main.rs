@@ -6,14 +6,22 @@ use std::{
     time::Duration
 };
 
+use web_server::ThreadPool;
+
 fn main() {
-    let listener = TcpListener::bind("127.0.0.1:7878").unwrap();
+    let addr = "127.0.0.1:7878";
+    let listener = TcpListener::bind(addr).unwrap();
+
+    println!("Listening on {addr}");
+
+    let pool = ThreadPool::new(4);
 
     for stream in listener.incoming() {
         let stream = stream.unwrap();
+        println!("Client connected");
 
-        thread::spawn(|| {
-            handle_connection(stream)
+        pool.execute(|| {
+            handle_connection(stream);
         });
     }
 }
@@ -21,6 +29,8 @@ fn main() {
 fn handle_connection(mut stream: TcpStream) {
     let buf_reader = BufReader::new(&mut stream);
     let request_line = buf_reader.lines().next().unwrap().unwrap();
+
+    println!("Incoming request {request_line}");
 
     let (status, filename) = match &request_line[..] {
         "GET / HTTP/1.1" => ("200 OK", "hello.html"),
