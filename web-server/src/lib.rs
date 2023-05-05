@@ -1,6 +1,6 @@
 use std::{
     sync::{mpsc, Arc, Mutex},
-    thread::{self, Thread}
+    thread,
 };
 
 pub struct ThreadPool {
@@ -32,15 +32,15 @@ impl ThreadPool {
 
         ThreadPool {
             workers,
-            sender: Some(sender)
+            sender: Some(sender),
         }
     }
 
     pub fn execute<F>(&self, f: F)
     where
-    // FnOnce because the callback will be called once
-    // Send because it will be moved across threads
-    // 'static because we don't know how long it will be alive
+        // FnOnce because the callback will be called once
+        // Send because it will be moved across threads
+        // 'static because we don't know how long it will be alive
         F: FnOnce() + Send + 'static,
     {
         let job = Box::new(f);
@@ -60,7 +60,7 @@ impl Drop for ThreadPool {
         // workers loops will return an error
         drop(self.sender.take());
 
-        while self.workers.len() > 0 {
+        while !self.workers.is_empty() {
             if let Some(worker) = self.workers.pop() {
                 println!("Shutting down worker {}", worker.id);
                 worker.thread.join().unwrap();

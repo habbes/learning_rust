@@ -3,7 +3,7 @@ use std::{
     io::{prelude::*, BufReader},
     net::{TcpListener, TcpStream},
     thread,
-    time::Duration
+    time::Duration,
 };
 
 use web_server::ThreadPool;
@@ -15,7 +15,6 @@ fn main() {
     println!("Listening on {addr}");
 
     let pool = ThreadPool::new(4);
-
 
     // stop receiving requests after 2 requests, this is just
     // to test that the graceful shutdown logic works
@@ -43,7 +42,7 @@ fn handle_connection(mut stream: TcpStream) {
             thread::sleep(Duration::from_secs(5));
             ("200 OK", "hello.html")
         }
-        _ =>  ("404 NOT FOUND", "404.html")
+        _ => ("404 NOT FOUND", "404.html"),
     };
 
     write_file_response(&mut stream, filename, status);
