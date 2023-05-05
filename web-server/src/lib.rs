@@ -1,11 +1,11 @@
 use std::{
     sync::{mpsc, Arc, Mutex},
-    thread
+    thread::{self, Thread}
 };
 
 pub struct ThreadPool {
     workers: Vec<Worker>,
-    sender: mpsc::Sender<Job>
+    sender: Option<mpsc::Sender<Job>>,
 }
 
 type Job = Box<dyn FnOnce() + Send + 'static>;
@@ -30,7 +30,10 @@ impl ThreadPool {
             workers.push(Worker::new(i, Arc::clone(&receiver)));
         }
 
-        ThreadPool { workers, sender }
+        ThreadPool {
+            workers,
+            sender: Some(sender)
+        }
     }
 
     pub fn execute<F>(&self, f: F)
@@ -42,7 +45,39 @@ impl ThreadPool {
     {
         let job = Box::new(f);
 
-        self.sender.send(job).unwrap();
+        // sender.as_ref because unwrap takes ownership of the sender, we don't want
+        // to move it, just unwrap a reference
+        self.sender.as_ref().unwrap().send(job).unwrap();
+    }
+}
+
+impl Drop for ThreadPool {
+    fn drop(&mut self) {
+        // take the Some(sender) from the Option and replace it with a None
+        // the drop the sender
+        // dropping the sender closes the channel, which indicates that no more
+        // messages will be sent. When that happens, the recv() in the
+        // workers loops will return an error
+        drop(self.sender.take());
+
+        while self.workers.len() > 0 {
+            if let Some(worker) = self.workers.pop() {
+                println!("Shutting down worker {}", worker.id);
+                worker.thread.join().unwrap();
+            }
+        }
+
+        // The book mead the worker.thread an Option<T> and
+        // implemented the shutdown logic as follows.
+        // However, I didn't understand why they didn't just pop the workers
+        // from the vector and join them
+        // for worker in &mut self.workers {
+        //     println!("Shutting down worker {}", worker.id);
+
+        //     if let Some(thread) = worker.thread.take() {
+        //         thread.join().unwrap();
+        //     }
+        // }
     }
 }
 
@@ -54,11 +89,18 @@ struct Worker {
 impl Worker {
     pub fn new(id: usize, receiver: Arc<Mutex<mpsc::Receiver<Job>>>) -> Worker {
         let thread = thread::spawn(move || loop {
-            let job = receiver.lock().unwrap().recv().unwrap();
+            let message = receiver.lock().unwrap().recv();
+            match message {
+                Ok(job) => {
+                    println!("Worker {id} got a job; executing.");
 
-            println!("Worker {id} got a job; executing.");
-
-            job();
+                    job();
+                }
+                Err(_) => {
+                    println!("Worker {id} disconnected; shutting down.");
+                    break;
+                }
+            }
         });
 
         Worker { id, thread }

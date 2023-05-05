@@ -16,7 +16,10 @@ fn main() {
 
     let pool = ThreadPool::new(4);
 
-    for stream in listener.incoming() {
+
+    // stop receiving requests after 2 requests, this is just
+    // to test that the graceful shutdown logic works
+    for stream in listener.incoming().take(2) {
         let stream = stream.unwrap();
         println!("Client connected");
 
@@ -24,6 +27,8 @@ fn main() {
             handle_connection(stream);
         });
     }
+
+    println!("Shutting down.");
 }
 
 fn handle_connection(mut stream: TcpStream) {
